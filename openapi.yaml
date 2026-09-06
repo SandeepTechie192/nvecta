@@ -1,0 +1,215 @@
+openapi: 3.0.3
+info:
+  title: Smart NoteAI API
+  description: RESTful API for Notes Management System with AI-powered Semantic Vector Search and Note Summarization.
+  version: 1.0.0
+  contact:
+    name: Backend Engineering Team
+servers:
+  - url: http://localhost:8000/api
+    description: Local Laravel Development Server
+  - url: http://localhost/api
+    description: Docker / Nginx Web Server
+
+paths:
+  /notes:
+    get:
+      summary: List paginated notes
+      description: Retrieve a paginated list of notes sorted by creation date descending.
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination.
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of records per page (1 to 100).
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotesResponse'
+    post:
+      summary: Create a new note
+      description: Create a note and generate its vector embedding automatically.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteInput'
+      responses:
+        '201':
+          description: Note created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SingleNoteResponse'
+        '422':
+          description: Validation error
+
+  /notes/{id}:
+    get:
+      summary: Get note by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Note details
+        '404':
+          description: Note not found
+    put:
+      summary: Update existing note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteInput'
+      responses:
+        '200':
+          description: Note updated
+        '404':
+          description: Note not found
+    delete:
+      summary: Delete note by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Note deleted successfully
+        '404':
+          description: Note not found
+
+  /notes/search:
+    get:
+      summary: AI-powered Semantic Search
+      description: Search notes using high-dimensional vector embeddings and Cosine Similarity.
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Conceptual or natural language query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Search results ordered by similarity match score
+
+  /notes/{id}/summary:
+    post:
+      summary: Generate AI Summary for Note
+      description: Generates a concise AI summary of the note content using OpenAI or embedded provider.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: force
+          in: query
+          description: Force regenerate summary bypassing cache
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Summary generated or fetched from cache
+
+components:
+  schemas:
+    NoteInput:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+          example: "Laravel Architecture Overview"
+        content:
+          type: string
+          example: "Detailed notes on dependency injection and service providers."
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["laravel", "php", "architecture"]
+    Note:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        summary:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PaginatedNotesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Note'
+        meta:
+          type: object
+          properties:
+            current_page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            last_page:
+              type: integer
+    SingleNoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Note'
