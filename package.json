@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "echo Build completed"
+        "build": "node -e \"require('fs').mkdirSync('dist', {recursive: true})\""
     },
     "devDependencies": {
         "axios": "^1.6.4",
