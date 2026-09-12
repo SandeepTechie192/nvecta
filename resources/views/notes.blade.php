@@ -289,14 +289,16 @@
             currentPage = page;
             
             try {
-                const response = await fetch(`/api/notes?page=${page}&limit=${currentLimit}`);
+                const response = await fetch(`/api/notes?page=${page}&limit=${currentLimit}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
                 const data = await response.json();
 
-                if (data.success) {
+                if (response.ok && data.success) {
                     renderNotesGrid(data.data, false);
                     updatePaginationUI(data.meta);
                 } else {
-                    showToast('Failed to fetch notes', 'error');
+                    showToast(data.message || 'Failed to fetch notes', 'error');
                 }
             } catch (err) {
                 console.error(err);

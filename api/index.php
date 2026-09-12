@@ -39,8 +39,14 @@ $_ENV['APP_EVENTS_CACHE'] = '/tmp/events.php';
 
 // Prepare writable /tmp SQLite DB for Vercel Serverless
 $dbPath = '/tmp/database.sqlite';
-if (!file_exists($dbPath) && file_exists(__DIR__ . '/../database/database.sqlite')) {
-    @copy(__DIR__ . '/../database/database.sqlite', $dbPath);
+$seedDb = __DIR__ . '/../database/database.sqlite';
+
+if (!file_exists($dbPath) || filesize($dbPath) < 100) {
+    if (file_exists($seedDb) && filesize($seedDb) > 100) {
+        @copy($seedDb, $dbPath);
+    } else {
+        @touch($dbPath);
+    }
 }
 
 putenv('DB_CONNECTION=sqlite');
@@ -48,6 +54,20 @@ $_ENV['DB_CONNECTION'] = 'sqlite';
 
 putenv("DB_DATABASE={$dbPath}");
 $_ENV['DB_DATABASE'] = $dbPath;
+
+// Auto-run migration & seed if table doesn't exist
+try {
+    if (file_exists($dbPath) && filesize($dbPath) < 1000) {
+        require_once __DIR__ . '/../vendor/autoload.php';
+        $app = require __DIR__ . '/../bootstrap/app.php';
+        $kernel = $app->make(\Illuminate\Contracts\Console\Kernel::class);
+        $kernel->bootstrap();
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+    }
+} catch (\Throwable $e) {
+    // Ignore if already seeded
+}
 
 // Forward Vercel request to Laravel public entrypoint
 require __DIR__ . '/../public/index.php';
