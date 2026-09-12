@@ -42,7 +42,7 @@ $dbPath = '/tmp/database.sqlite';
 $seedDb = __DIR__ . '/../database/database.sqlite';
 
 if (!file_exists($dbPath) || filesize($dbPath) < 100) {
-    if (file_exists($seedDb) && filesize($seedDb) > 100) {
+    if (file_exists($seedDb) && filesize($seedDb) > 100) { 
         @copy($seedDb, $dbPath);
     } else {
         @touch($dbPath);
