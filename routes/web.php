@@ -15,6 +15,12 @@ Route::get('/', function () {
     return view('notes');
 });
 
-Route::fallback(function () {
+Route::fallback(function (\Illuminate\Http\Request $request) {
+    if ($request->is('api/*') || $request->wantsJson()) {
+        return response()->json([
+            'success' => false,
+            'message' => "The route {$request->path()} could not be found."
+        ], 404);
+    }
     return view('notes');
 });

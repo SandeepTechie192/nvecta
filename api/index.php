@@ -1,5 +1,12 @@
 <?php
 
+// Fix Vercel serverless request path resolution
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['SCRIPT_FILENAME'] = __DIR__ . '/../public/index.php';
+$_SERVER['PHP_SELF'] = '/index.php';
+unset($_SERVER['ORIG_SCRIPT_NAME']);
+unset($_SERVER['ORIG_SCRIPT_FILENAME']);
+
 // Configure application default keys and environment variables for Vercel
 $appKey = getenv('APP_KEY') ?: 'base64:wAdGygv1Lq1q8Nn2GRiYjdsncQiLMxn/Y8MHRVwWUC4=';
 putenv("APP_KEY={$appKey}");
